@@ -40,7 +40,7 @@ Yes. `AppSettings.custom_words: Vec<String>` (`settings.rs`), plus
   `managers/transcription.rs`), and fuzzy correction is skipped
   (`custom_words_already_prompted`).
 
-This is a *spelling-biasing* feature (list of target words), not a from->to
+This is a _spelling-biasing_ feature (list of target words), not a from->to
 replacement table. The Singlish layer is therefore additive and does not replace it.
 
 ### (c) Post-transcription hooks
@@ -55,14 +55,14 @@ Rust side has no tag handling of its own.
 
 ### (d) GitHub Actions
 
-| Workflow | Trigger | Does |
-| --- | --- | --- |
-| `build.yml` | `workflow_call` | Reusable. Checkout, bun, Rust, per-OS deps, optional signing, `tauri-action`, uploads artifacts (macOS: `.dmg` + `.app`). |
-| `build-test.yml` | manual | Matrix over macOS arm64/x64, Linux, Windows via `build.yml`, signing on. |
-| `main-build.yml` | push to `main` | Same via `build.yml`. |
-| `pr-test-build.yml` | manual | PR build via `build.yml`. |
-| `release.yml` | release | Signed release builds. |
-| `test.yml`, `code-quality.yml`, `nix-check.yml`, `playwright.yml` | manual / `main` | Tests, lint, nix, e2e. |
+| Workflow                                                          | Trigger         | Does                                                                                                                      |
+| ----------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `build.yml`                                                       | `workflow_call` | Reusable. Checkout, bun, Rust, per-OS deps, optional signing, `tauri-action`, uploads artifacts (macOS: `.dmg` + `.app`). |
+| `build-test.yml`                                                  | manual          | Matrix over macOS arm64/x64, Linux, Windows via `build.yml`, signing on.                                                  |
+| `main-build.yml`                                                  | push to `main`  | Same via `build.yml`.                                                                                                     |
+| `pr-test-build.yml`                                               | manual          | PR build via `build.yml`.                                                                                                 |
+| `release.yml`                                                     | release         | Signed release builds.                                                                                                    |
+| `test.yml`, `code-quality.yml`, `nix-check.yml`, `playwright.yml` | manual / `main` | Tests, lint, nix, e2e.                                                                                                    |
 
 `build.yml` reads secrets only when `sign-binaries` is true, so calling it with
 `sign-binaries: false` gives an unsigned build with no secrets.
@@ -72,9 +72,11 @@ Rust side has no tag handling of its own.
 Already in Handy (see Phase 0), so no engine work and no `transcribe-rs`/`transcribe-cpp`
 bump. Changes:
 
-- Catalog label changed to **"SenseVoice (Chinese + English)"** (`catalog.json`, id
-  `SenseVoiceSmall` unchanged so downloads and settings keep working). If you merge
-  upstream and `catalog.json` conflicts, re-apply this one-line rename.
+- Label changed to **"SenseVoice (Chinese + English)"** in
+  `catalog/mod.rs::display_name` (id `SenseVoiceSmall` unchanged so downloads and
+  settings keep working). It is not done in `catalog.json`, because CI
+  (`bun run check:catalog`) requires that file to be byte-identical to
+  `@handy-computer/models`.
 - "int8": the GGUF catalog has no int8 file. The default quant is **Q8_0**, the
   closest equivalent (252 MB).
 - Tag stripping: transcribe-cpp drops CONTROL tokens (`<|zh|>`, `<|HAPPY|>`,
@@ -82,7 +84,7 @@ bump. Changes:
   it. As a safety net, `singlish_tools::strip_asr_tags` also runs first in
   `post_process_transcription_text` (unit-tested).
 - Simplified output: Handy's existing **Chinese script** setting (Settings > Advanced)
-  converts Mandarin output via OpenCC. Set it to *Simplified*. Its default follows the
+  converts Mandarin output via OpenCC. Set it to _Simplified_. Its default follows the
   system locale, so I did not change it.
 
 ## Phase 2 — Singlish vocabulary layer
@@ -110,7 +112,7 @@ bump. Changes:
   still matches (`好好la` -> `好好lah`). Replacements keep a leading capital
   (`La` -> `Lah`). `protected_terms` always win over replacements inside their span.
 - **Deliberate deviation:** matches written ALL-CAPS with 2+ letters (`LA`, `LAR`) are
-  treated as acronyms and left alone by *replacements*, so "I live in LA" is not
+  treated as acronyms and left alone by _replacements_, so "I live in LA" is not
   turned into "lah". Protected terms are unaffected.
 - Conservative seed: no mapping from a common English word (`low`, `may`, `shook`,
   `chop`, `sir`, `lore`, `lay`, `le`, `lo` are all deliberately absent; tests cover
@@ -176,13 +178,13 @@ for options. If auto-detection picks the wrong model, add
 
 ## Phase 4 — macOS build (GitHub Actions)
 
-`.github/workflows/macos-dev-build.yml`: runs on push to `v0.2-singlish` and on manual
+`.github/workflows/macos-dev-build.yml`: runs on push to `v0.2-singlish` or `main` and on manual
 dispatch, on `macos-14` (Apple Silicon). No secrets, no signing, no notarization.
 
 - It does **not** call `build.yml`. My first attempt did, and failed at bundling:
   `build.yml` always exports `APPLE_CERTIFICATE` (empty when not signing) and Tauri
   tries to import an empty-but-set certificate (`failed to import keychain
-  certificate`). Rather than edit `build.yml` (merge pain with upstream), the new
+certificate`). Rather than edit `build.yml` (merge pain with upstream), the new
   workflow repeats its macOS steps (Bun, Rust, cache, `bun install`, `tauri build`).
 - `src-tauri/tauri.dev.conf.json` turns off `createUpdaterArtifacts`, which would
   otherwise require the updater signing key. The app keeps Handy's ad-hoc signature
@@ -220,7 +222,7 @@ Handy's existing custom-words mechanism already passes `custom_words` as the hin
 ### What is untested
 
 - **Running the app.** I cannot run macOS apps. Nobody has launched this build, toggled
-  the setting, clicked *Open file*, or dictated Singlish through it.
+  the setting, clicked _Open file_, or dictated Singlish through it.
 - `src/bindings.ts` was edited by hand (two commands, one settings field) because it is
   normally regenerated by tauri-specta on a debug run. Running `bun run tauri dev`
   once will regenerate it; expect an identical or whitespace-only diff.
@@ -259,3 +261,11 @@ first (same bundle identifier, so settings and models are shared).
 ```bash
 cd crates/singlish-tools && cargo run --release --features metal --bin bakeoff -- --audio-dir ~/clips --engines parakeet,sensevoice,qwen3asr
 ```
+
+### Upstream's "Main Branch Build" in this fork
+
+It builds all 7 platforms and then signs with cjpais's Apple certificate, Azure
+signing, and Tauri updater key. A fork has none of those secrets, so after merging
+PR #1 every job compiled and then failed at signing. `main-build.yml` now has
+`if: github.repository == 'cjpais/Handy'`, so in this fork it shows as skipped. The
+unsigned `macos-dev-build.yml` also runs on pushes to `main`.
